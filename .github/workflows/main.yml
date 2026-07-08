@@ -53,7 +53,7 @@ jobs:
         make recoveryimage -j$(nproc)
 
     - name: Upload TWRP Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: TWRP-Recovery-Image
         path: twrp/out/target/product/RAVOZ_Z6_Pro/*.img
