@@ -66,6 +66,16 @@ jobs:
         git config --global user.name "md4657800-svg"
         git config --global user.email "md4657800-svg@users.noreply.github.com"
         repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-11 --depth=1
+        
+        # omni vendor কনফিগারেশন যোগ করুন
+        mkdir -p .repo/local_manifests
+        cat > .repo/local_manifests/omni.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <manifest>
+          <project path="vendor/omni" name="minimal-manifest-twrp/android_vendor_omni" remote="github" revision="twrp-11" />
+        </manifest>
+        EOF
+        
         repo sync -c -j$(nproc) --force-sync --no-clone-bundle --no-tags
 
     - name: Clone Device Tree
