@@ -9,7 +9,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Free Disk Space
       run: |
@@ -17,11 +17,40 @@ jobs:
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
         sudo rm -rf "/usr/local/share/boost"
+        sudo rm -rf /opt/hostedtoolcache
 
     - name: Install Build Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+        sudo apt-get install -y \
+          bc \
+          bison \
+          build-essential \
+          ccache \
+          curl \
+          flex \
+          g++-multilib \
+          gcc-multilib \
+          git \
+          gnupg \
+          gperf \
+          imagemagick \
+          lib32readline6-dev \
+          lib32z1-dev \
+          liblz4-tool \
+          libncurses-dev \
+          libreadline-dev \
+          libssl-dev \
+          libxml2 \
+          libxml2-utils \
+          lzop \
+          pngcrush \
+          rsync \
+          schedtool \
+          squashfs-tools \
+          xsltproc \
+          zip \
+          zlib1g-dev
 
     - name: Install Repo Tool
       run: |
@@ -32,8 +61,8 @@ jobs:
 
     - name: Initialize and Sync TWRP Manifest
       run: |
-        mkdir twrp
-        cd twrp
+        mkdir -p ~/twrp
+        cd ~/twrp
         git config --global user.name "md4657800-svg"
         git config --global user.email "md4657800-svg@users.noreply.github.com"
         repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-11 --depth=1
@@ -41,19 +70,29 @@ jobs:
 
     - name: Clone Device Tree
       run: |
-        cd twrp
+        cd ~/twrp
         git clone https://github.com/md4657800-svg/Ravoz-Z6-Pro-Twrp-img device/ravoz/RAVOZ_Z6_Pro -b main
 
     - name: Build TWRP Recovery
       run: |
-        cd twrp
+        cd ~/twrp
         export ALLOW_MISSING_DEPENDENCIES=true
         source build/envsetup.sh
         lunch omni_RAVOZ_Z6_Pro-eng
         make recoveryimage -j$(nproc)
 
-    - name: Upload TWRP Artifact
-      uses: actions/upload-artifact@v4
+    - name: Create Release and Upload TWRP Image
+      if: success()
+      uses: softprops/action-gh-release@v1
       with:
-        name: TWRP-Recovery-Image
-        path: twrp/out/target/product/RAVOZ_Z6_Pro/*.img
+        files: ~/twrp/out/target/product/RAVOZ_Z6_Pro/*.img
+        tag_name: twrp-build-${{ github.run_number }}
+        name: TWRP Recovery Build #${{ github.run_number }}
+        body: |
+          TWRP Recovery Image for Ravoz Z6 Pro (MT6762G Helio G25)
+          Android 11 Build
+          Build Date: ${{ github.event.head_commit.timestamp }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
